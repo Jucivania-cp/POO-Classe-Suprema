@@ -1,36 +1,46 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
 
 STATUS_VALIDOS = {"NAO_LIDO", "LENDO", "CONCLUIDO"}
 
 class Publicacao(ABC):
-    def __init__ (self, titulo, autor, ano, genero, paginas):
+    def __init__(self, titulo, autor, ano, status="NAO_LIDO", avaliacao=None):
+        self.__titulo = None
+        self.__autor = None
+        self.__ano = None
+        self.__status = None
+        self.__avaliacao = None
+        self.__anotacoes = []
+
         self.titulo = titulo
         self.autor = autor
         self.ano = ano
-        self.genero = genero
-        self.paginas = paginas
-        self._status = "NÃO LIDO"
-        self._avaliacao = 0.0
-        self.data_inclusao = datetime.now()
-        self.data_inicio = None
-        self.data_fim = None
-        self.anotacoes = []
+        self.status = status
+        self.avaliacao = avaliacao  
 
     @property
     def titulo(self):
-        return self._titulo
-    
+        return self.__titulo
+
     @titulo.setter
-    def titulo(self, valor):
-        if not valor or not valor.strip():
-            raise ValueError ("O título não pode ser vazio")
-        self._titulo = valor
+    def titulo(self, value):
+        if not value or not value.strip():
+            raise ValueError("Título não pode ser vazio.")
+        self.__titulo = value.strip()
+
+    @property
+    def autor(self):
+        return self.__autor
+
+    @autor.setter
+    def autor(self, value):
+        if not value or not value.strip():
+            raise ValueError("Autor não pode ser vazio.")
+        self.__autor = value.strip()
 
     @property
     def ano(self):
-        return self._ano
-    
+        return self.__ano
+
     @ano.setter
     def ano(self, value):
         if not isinstance(value, int) or value < 0:
@@ -38,21 +48,31 @@ class Publicacao(ABC):
         self.__ano = value
 
     @property
-    def avaliacao(self):
-        return self._avaliacao
-    
-    @avaliacao.setter
-    def avaliacao (self, valor):
-        if self._status != "LIDO":
-            raise ValueError ("Avaliação só pode ser feita após o status ser 'LIDO'")
-        if not (0 <= valor <= 10):
-            raise ValueError ("A nota deve estar entre 0 e 10")
-        self._avaliacao = valor
+    def status(self):
+        return self.__status
+
+    @status.setter
+    def status(self, value):
+        if value not in STATUS_VALIDOS:
+            raise ValueError(f"Status inválido. Use {STATUS_VALIDOS}.")
+        self.__status = value
 
     @property
-    def status(self):
-        return self._status
-    
+    def avaliacao(self):
+        return self.__avaliacao
+
+    @avaliacao.setter
+    def avaliacao(self, value):
+        if value is None:
+            self.__avaliacao = None
+            return
+        if not isinstance(value, int) or not (1 <= value <= 10):
+            raise ValueError("Avaliação deve ser um inteiro entre 1 e 10.")
+        # Só avalia se concluído
+        if self.status != "CONCLUIDO":
+            raise ValueError("Só é possível avaliar quando o status for CONCLUIDO.")
+        self.__avaliacao = value
+
     @property
     def anotacoes(self):
         return list(self.__anotacoes)
@@ -62,105 +82,41 @@ class Publicacao(ABC):
             raise ValueError("Anotação não pode ser vazia.")
         self.__anotacoes.append({"texto": texto.strip(), "trecho": (trecho or None)})
 
-# --- MÉTODOS DE NEGÓCIO ---
+    # MÉTODOS DE STATUS
     def iniciar_leitura(self):
-        self._status = "LENDO"
-        self.data_inicio = datetime.now()
+        self.status = "LENDO"
 
-    def concluir_leitura(self):
-        if not self.data_inicio:
-            raise ValueError("Não pode ser marcada como LIDA sem data de início [8, 11].")
-        self._status = "LIDO"
-        self.data_fim = datetime.now()
+    def concluir_leitura(self, avaliacao=None):
+        self.status = "CONCLUIDO"
+        if avaliacao is not None:
+            self.avaliacao = avaliacao
 
-    # --- PERSISTÊNCIA ---
+  
+
+    # SERIALIZAÇÃO
     def to_dict(self):
-        """Converte o objeto em dicionário para o JSON [7]."""
         return {
+            "tipo": self.tipo(),
             "titulo": self.titulo,
             "autor": self.autor,
             "ano": self.ano,
-            "genero": self.genero,
-            "paginas": self.paginas,
-            "status": self._status,
-            "avaliacao": self._avaliacao,
-            "data_inclusao": self.data_inclusao.isoformat() if isinstance(self.data_inclusao, datetime) else self.data_inclusao,
-            "data_inicio": self.data_inicio.isoformat() if isinstance(self.data_inicio, datetime) else self.data_inicio,
-            "data_fim": self.data_fim.isoformat() if isinstance(self.data_fim, datetime) else self.data_fim
+            "status": self.status,
+            "avaliacao": self.avaliacao,
+            "anotacoes": self.anotacoes,
         }
 
-    @classmethod
-    def from_dict(cls, dados):
-        """Método fábrica que decide qual classe filha instanciar [1]."""
-        tipo = dados.get('tipo')
-        
-        if tipo == 'livro':
-            return Livro.from_dict(dados)
-        elif tipo == 'revista':
-            return Revista.from_dict(dados)
-        raise ValueError(f"Tipo '{tipo}' desconhecido [1].")
+    @staticmethod
+    def normalizar_chave(titulo, autor, ano, tipo):
+        return f"{tipo}|{titulo.strip().lower()}|{autor.strip().lower()}|{ano}"
 
-    # --- MÉTODOS ESPECIAIS ---
-    def __str__(self):
-        return f"{self.titulo} - {self.autor} ({self.ano}) | Status: {self.status}"
-
-    def __repr__(self):
-        return f"Publicacao(titulo='{self.titulo}', status='{self.status}')"
-
-    def __lt__(self, outro):
-        return self.ano < outro.ano
-
-    def __eq__(self, outro):
-        if not isinstance(outro, Publicacao): return False
-        return (self.titulo.lower() == outro.titulo.lower() and 
-                self.autor.lower() == outro.autor.lower())
+    @abstractmethod
+    def tipo(self):
+        ...
 
 class Livro(Publicacao):
-    def __init__(self, titulo, autor, ano, genero, paginas,isbn):
-        super().__init__(titulo, autor, ano, genero, paginas)
-        self.isbn = isbn
+    def tipo(self):
+        return "Livro"
 
-    def to_dict(self):
-        dados = super().to_dict()
-        dados["tipo"] = "livro"
-        dados["extra"] = self.isbn [12]
-        return dados
-
-    @classmethod
-    def from_dict(cls, dados):
-        obj = cls(dados['titulo'], dados['autor'], dados['ano'], 
-                  dados['genero'], dados['paginas'], dados.get('extra'))
-        # Restaura estados sem disparar validações de fluxo [2]
-        obj._status = dados.get('status')
-        obj._avaliacao = dados.get('avaliacao', 0.0)
-        obj.data_inclusao = dados.get('data_inclusao')
-        obj.data_inicio = dados.get('data_inicio')
-        obj.data_fim = dados.get('data_fim')
-        return obj
-
-    
 class Revista(Publicacao):
-    def __init__(self, titulo, autor, ano, genero, paginas,edicao):
-        super().__init__(titulo, autor, ano, genero, paginas)
-        self.edicao = edicao
-
-    def __str__(self):
-        return f"[REVISTA] {super().__str__()} | EDIÇÃO: {self.edicao}"
-
-    def to_dict(self):
-        dados = super().to_dict()
-        dados["tipo"] = "revista"
-        dados["extra"] = self.edicao [13]
-        return dados
-
-    @classmethod
-    def from_dict(cls, dados):
-        obj = cls(dados['titulo'], dados['autor'], dados['ano'], 
-                  dados['genero'], dados['paginas'], dados.get('extra'))
-        # Restaura estados e datas (Corrigido: return no final) [3, 15]
-        obj._status = dados.get('status')
-        obj._avaliacao = dados.get('avaliacao', 0.0)
-        obj.data_inclusao = dados.get('data_inclusao')
-        obj.data_inicio = dados.get('data_inicio')
-        obj.data_fim = dados.get('data_fim')
-        return obj
+    def tipo(self):
+        return "Revista"
