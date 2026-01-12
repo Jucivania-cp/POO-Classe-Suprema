@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+STATUS_VALIDOS = {"NAO_LIDO", "LENDO", "CONCLUIDO"}
+
 class Publicacao(ABC):
     def __init__ (self, titulo, autor, ano, genero, paginas):
         self.titulo = titulo
@@ -30,10 +32,10 @@ class Publicacao(ABC):
         return self._ano
     
     @ano.setter
-    def ano (self, valor):
-        if valor < 1500:
-            raise ValueError ("O ano de publicação deve ser maior ou igual a 1500")
-        self._ano = valor
+    def ano(self, value):
+        if not isinstance(value, int) or value < 0:
+            raise ValueError("Ano deve ser um inteiro positivo.")
+        self.__ano = value
 
     @property
     def avaliacao(self):
@@ -50,6 +52,15 @@ class Publicacao(ABC):
     @property
     def status(self):
         return self._status
+    
+    @property
+    def anotacoes(self):
+        return list(self.__anotacoes)
+
+    def adicionar_anotacao(self, texto, trecho=None):
+        if not texto or not texto.strip():
+            raise ValueError("Anotação não pode ser vazia.")
+        self.__anotacoes.append({"texto": texto.strip(), "trecho": (trecho or None)})
 
 # --- MÉTODOS DE NEGÓCIO ---
     def iniciar_leitura(self):
