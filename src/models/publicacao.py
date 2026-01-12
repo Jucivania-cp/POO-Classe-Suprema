@@ -10,8 +10,9 @@ class Publicacao(ABC):
         self.paginas = paginas
         self._status = "NÃO LIDO"
         self._avaliacao = 0.0
-        self.data_inclusao
-        self.data_fim
+        self.data_inclusao = datetime.now()
+        self.data_inicio = None
+        self.data_fim = None
         self.anotacoes = []
 
     @property
@@ -105,7 +106,7 @@ class Publicacao(ABC):
 
 class Livro(Publicacao):
     def __init__(self, titulo, autor, ano, genero, paginas,isbn):
-        super.__init__(self, titulo, autor, ano, genero, paginas)
+        super().__init__(titulo, autor, ano, genero, paginas)
         self.isbn = isbn
 
     def to_dict(self):
@@ -129,13 +130,13 @@ class Livro(Publicacao):
     
 class Revista(Publicacao):
     def __init__(self, titulo, autor, ano, genero, paginas,edicao):
-        super.__init__(self, titulo, autor, ano, genero, paginas)
+        super().__init__(titulo, autor, ano, genero, paginas)
         self.edicao = edicao
 
     def __str__(self):
         return f"[REVISTA] {super().__str__()} | EDIÇÃO: {self.edicao}"
 
-  def to_dict(self):
+    def to_dict(self):
         dados = super().to_dict()
         dados["tipo"] = "revista"
         dados["extra"] = self.edicao [13]
