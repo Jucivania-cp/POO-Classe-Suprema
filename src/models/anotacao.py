@@ -13,3 +13,16 @@ class Anotacao:
 
     def __repr__(self):
         return f"<Anotacao texto='{self.texto}', trecho='{self.trecho}', data='{self.data}'>"
+
+    def to_dict(self):
+        return {
+            "texto": self.texto,
+            "trecho": self.trecho,
+            "data": self.data.isoformat()
+        }
+
+    @classmethod
+    def from_dict(cls, dados):
+        obj = cls(dados["texto"], dados.get("trecho"))
+        obj.data = datetime.fromisoformat(dados["data"])
+        return obj
