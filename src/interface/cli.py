@@ -73,9 +73,6 @@ def main():
             if args.avaliacao is not None:
                 msg += f" Avaliação: {args.avaliacao}."
             print(msg)
-        elif args.comando == "abandonar":
-            colecao.abandonar(args.titulo, args.autor, args.ano, args.tipo)
-            print("OK: status atualizado para ABANDONADO.")
         elif args.comando == "anotar":
             colecao.anotar(args.titulo, args.autor, args.ano, args.tipo, args.texto, args.trecho)
             print("OK: anotação adicionada.")

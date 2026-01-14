@@ -45,13 +45,6 @@ class Colecao:
         pub.concluir_leitura(avaliacao)
         self.repositorio.salvar(self.publicacoes)
 
-    def abandonar(self, titulo, autor, ano, tipo):
-        pub = self.buscar(titulo, autor, ano, tipo)
-        if not pub:
-            raise ValueError("Publicação não encontrada.")
-        pub.abandonar()
-        self.repositorio.salvar(self.publicacoes)
-
     def anotar(self, titulo, autor, ano, tipo, texto, trecho=None):
         pub = self.buscar(titulo, autor, ano, tipo)
         if not pub:

@@ -10,14 +10,14 @@ def medias(publicacoes):
     media_geral = mean(avaliadas) if avaliadas else None
 
     por_status = {}
-    for st in {"NAO_LIDO", "LENDO", "CONCLUIDO", "ABANDONADO"}:
+    for st in {"NAO_LIDO", "LENDO", "CONCLUIDO"}:
         vals = [p.avaliacao for p in publicacoes if p.status == st and p.avaliacao is not None]
         por_status[st] = mean(vals) if vals else None
 
     return {"geral": media_geral, "por_status": por_status}
 
 def contagem_por_status(publicacoes):
-    cont = {"NAO_LIDO": 0, "LENDO": 0, "CONCLUIDO": 0, "ABANDONADO": 0}
+    cont = {"NAO_LIDO": 0, "LENDO": 0, "CONCLUIDO": 0}
     for p in publicacoes:
         cont[p.status] += 1
     return cont
