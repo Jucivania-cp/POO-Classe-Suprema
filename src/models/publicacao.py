@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-STATUS_VALIDOS = {"NAO_LIDO", "LENDO", "CONCLUIDO"}
+STATUS_VALIDOS = {"NÃO LIDO", "LENDO", "CONCLUIDO"}
 
 class Publicacao(ABC):
-    def __init__(self, titulo, autor, ano, status="NAO_LIDO", avaliacao=None):
+    def __init__(self, titulo, autor, ano, status="NÃO LIDO", avaliacao=None):
         self.__titulo = None
         self.__autor = None
         self.__ano = None

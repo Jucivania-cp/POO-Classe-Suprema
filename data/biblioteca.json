@@ -1,29 +1,11 @@
 [
     {
         "tipo": "Livro",
-        "titulo": "teste",
-        "autor": "Machado de Assis",
-        "ano": 1899,
-        "status": "NAO_LIDO",
-        "avaliacao": null,
-        "anotacoes": []
-    },
-    {
-        "tipo": "Livro",
         "titulo": "Dom Casmurro",
         "autor": "Machado de Assis",
         "ano": 1899,
-        "status": "CONCLUIDO",
+        "status": "NÃO LIDO",
         "avaliacao": null,
-        "anotacoes": [
-            {
-                "texto": "exemplodetexto",
-                "trecho": null
-            },
-            {
-                "texto": "exemplodetexto",
-                "trecho": "exemplodetrecho"
-            }
-        ]
+        "anotacoes": []
     }
 ]
