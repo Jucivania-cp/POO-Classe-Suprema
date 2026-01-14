@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from src.models.anotacao import Anotacao
 from datetime import datetime
 from exceptions import*
+from src.models.livro import Livro
+from models.revista import Revista
 
 STATUS_VALIDOS = {"NÃO LIDO", "LENDO", "CONCLUIDO"}
 
@@ -155,6 +157,7 @@ class Publicacao(ABC):
 
     # SERIALIZAÇÃO
     def to_dict(self):
+        """Converte o objeto em dicionário para o JSON."""
         return {
             "tipo": self.tipo(),
             "titulo": self.titulo,
@@ -169,6 +172,17 @@ class Publicacao(ABC):
             "data_fim": self.data_fim.isoformat() if self.data_fim else None,
             "anotacoes": self.anotacoes,
         }
+    
+    @classmethod
+    def from_dict(cls, dados):
+        """Método fábrica que decide qual classe filha instanciar."""
+        tipo = dados.get("tipo")
+        if tipo == "livro":
+            return Livro.from_dict(dados)
+        elif tipo == "revista":
+            return Revista.from_dict(dados)
+        raise ValueError(f"Tipo '{tipo}' desconhecido.")
+
 
     @staticmethod
     def normalizar_chave(titulo, autor, ano, tipo):
@@ -178,10 +192,4 @@ class Publicacao(ABC):
     def tipo(self):
         ...
 
-class Livro(Publicacao):
-    def tipo(self):
-        return "Livro"
 
-class Revista(Publicacao):
-    def tipo(self):
-        return "Revista"
