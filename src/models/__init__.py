@@ -1,6 +1,4 @@
-from .publicacao import Publicacao
-from .livro import Livro
-from .revista import Revista
-from .anotacao import Anotacao
-
-__all__ = ["Publicacao", "Livro", "Revista", "Anotacao"]
+from src.models.publicacao import Publicacao
+from src.models.livro import Livro
+from src.models.revista import Revista
+from src.models.anotacao import Anotacao

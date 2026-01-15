@@ -1,101 +1,104 @@
 import argparse
-from src.models.livro import Livro
-from src.models.revista import Revista
-from src.models.publicacao import Publicacao
-from src.services.colecao import Colecao
+from src.models import Livro, Revista, Anotacao
 from src.persistence.repositorio import RepositorioJSON
+from src.services.colecao import Colecao
 
-# Instancia o repositório e a coleção
 repo = RepositorioJSON("data/biblioteca.json")
 colecao = Colecao(repo)
 
-# ---------------- SUBCOMANDOS ----------------
+# ---------------- COMANDOS ----------------
+
 def cadastrar(args):
     if args.tipo == "livro":
-        pub = Livro(
-            titulo=args.titulo,
-            autor=args.autor,
-            ano=args.ano,
-            genero=args.genero,
-            paginas=args.paginas,
-            isbn=args.isbn
-        )
+        if args.edicao is not None:
+            print("ATENÇÃO: Para livros, não use --edicao.")
+            return
+        pub = Livro(args.titulo, args.autor, args.ano, args.genero, args.paginas, args.isbn)
+    elif args.tipo == "revista":
+        if args.isbn is not None:
+            print("ATENÇÃO: Revista não aceita --isbn.")
+            return
+        pub = Revista(args.titulo, args.autor, args.ano, args.genero, args.paginas, args.edicao)
     else:
-        pub = Revista(
-            titulo=args.titulo,
-            autor=args.autor,
-            ano=args.ano,
-            genero=args.genero,
-            paginas=args.paginas,
-            edicao=args.edicao
-        )
+        print("ATENÇÃO: Tipo inválido.")
+        return
+
     try:
         colecao.adicionar(pub)
-        print("✅ Publicação cadastrada:", pub)
+        print("Publicação cadastrada:", pub)
     except Exception as e:
-        print("❌ Erro ao cadastrar:", e)
+        print("ATENÇÃO: Erro ao cadastrar:", e)
 
 def listar(args):
     pubs = colecao.listar()
     if not pubs:
-        print("📭 Nenhuma publicação cadastrada.")
+        print("Nenhuma publicação cadastrada.")
     else:
-        print("📚 Publicações:")
+        for i, p in enumerate(pubs):
+            print(f"[{i}] {p}")
+
+def iniciar(args):
+    pubs = colecao.listar()
+    try:
+        pub = pubs[args.index]
+        pub.iniciar_leitura()
+        colecao.repositorio.salvar(colecao.publicacoes)
+        print("Leitura iniciada:", pub)
+    except Exception as e:
+        print("Erro:", e)
+
+def concluir(args):
+    pubs = colecao.listar()
+    try:
+        pub = pubs[args.index]
+        pub.concluir_leitura()
+        colecao.repositorio.salvar(colecao.publicacoes)
+        print("Leitura concluída:", pub)
+    except Exception as e:
+        print("Erro:", e)
+
+def buscar_titulo(args):
+    pubs = [p for p in colecao.listar() if args.titulo.lower() in p.titulo.lower()]
+    if not pubs:
+        print("Nenhum resultado para título:", args.titulo)
+    else:
         for p in pubs:
             print("-", p)
 
-def anotar(args):
-    pubs = colecao.listar()
+def buscar_autor(args):
+    pubs = [p for p in colecao.listar() if args.autor.lower() in p.autor.lower()]
     if not pubs:
-        print("📭 Nenhuma publicação disponível.")
-        return
-    pub = pubs[0]  # exemplo simples: anotar na primeira publicação
-    anot = Anotacao(args.texto, args.trecho)
-    pub.adicionar_anotacao(anot)
-    colecao.repositorio.salvar(colecao.publicacoes)
-    print("📝 Anotação adicionada:", anot)
-
-def relatorio(args):
-    print("📊 Relatório:")
-    print("Total:", colecao.total_publicacoes())
-    print("Percentuais:", colecao.percentual_por_status())
-    medias = colecao.medias_avaliacoes()
-    print("Média geral das avaliações:", medias["geral"])
-    print("Média por status:", medias["por_status"])
-    print("Contagem por status:", colecao.contagem_por_status())
-    print("Percentual por status:", colecao.percentual_por_status())
-    top5 = colecao.top5_avaliados()
-    if not top5:
-        print("Nenhuma publicação avaliada ainda.")
+        print("Nenhum resultado para autor:", args.autor)
     else:
-        print("Top 5 mais bem avaliados:")
-        for p in top5:
+        for p in pubs:
             print("-", p)
 
-def buscar(args):
-    resultados = []
-    if args.titulo:
-        resultados = colecao.buscar_por_titulo(args.titulo)
-    elif args.autor:
-        resultados = colecao.buscar_por_autor(args.autor)
-    elif args.genero:
-        resultados = colecao.buscar_por_genero(args.genero)
-    elif args.status:
-        resultados = colecao.buscar_por_status(args.status)
+def avaliar(args):
+    pubs = colecao.listar()
+    try:
+        pub = pubs[args.index]
+        pub.avaliacao = args.nota
+        colecao.repositorio.salvar(colecao.publicacoes)
+        print(f"Avaliação registrada para '{pub.titulo}': {pub.avaliacao}")
+    except Exception as e:
+        print("Erro:", e)
 
-    if not resultados:
-        print("📭 Nenhuma publicação encontrada.")
-    else:
-        print("🔎 Resultados da busca:")
-        for p in resultados:
-            print("-", p)
 
-# ---------------- CLI PRINCIPAL ----------------
+def remover(args):
+    pubs = colecao.listar()
+    try:
+        pub = pubs[args.index]
+        colecao.remover(pub)
+        print("🗑️ Publicação removida:", pub)
+    except Exception as e:
+        print("Erro:", e)
+
+# ---------------- MAIN ----------------
+
 def main():
     parser = argparse.ArgumentParser(prog="bib", description="Biblioteca Pessoal Digital")
     sub = parser.add_subparsers(dest="cmd")
 
-    # cadastrar
     cad = sub.add_parser("cadastrar", help="Cadastrar uma publicação")
     cad.add_argument("--tipo", choices=["livro", "revista"], required=True)
     cad.add_argument("--titulo", required=True)
@@ -107,27 +110,28 @@ def main():
     cad.add_argument("--edicao", type=int)
     cad.set_defaults(func=cadastrar)
 
-    # listar
     lst = sub.add_parser("listar", help="Listar publicações")
     lst.set_defaults(func=listar)
 
-    # anotar
-    ant = sub.add_parser("anotar", help="Adicionar anotação")
-    ant.add_argument("--texto", required=True)
-    ant.add_argument("--trecho")
-    ant.set_defaults(func=anotar)
+    ini = sub.add_parser("iniciar", help="Iniciar leitura")
+    ini.add_argument("--index", type=int, required=True)
+    ini.set_defaults(func=iniciar)
 
-    # relatorio
-    rel = sub.add_parser("relatorio", help="Gerar relatório")
-    rel.set_defaults(func=relatorio)
+    con = sub.add_parser("concluir", help="Concluir leitura")
+    con.add_argument("--index", type=int, required=True)
+    con.set_defaults(func=concluir)
 
-    # buscar
-    bsc = sub.add_parser("buscar", help="Buscar publicações")
-    bsc.add_argument("--titulo")
-    bsc.add_argument("--autor")
-    bsc.add_argument("--genero")
-    bsc.add_argument("--status", choices=["NÃO LIDO", "LENDO", "CONCLUIDO"])
-    bsc.set_defaults(func=buscar)
+    bt = sub.add_parser("buscar-titulo", help="Buscar por título")
+    bt.add_argument("--titulo", required=True)
+    bt.set_defaults(func=buscar_titulo)
+
+    ba = sub.add_parser("buscar-autor", help="Buscar por autor")
+    ba.add_argument("--autor", required=True)
+    ba.set_defaults(func=buscar_autor)
+
+    rm = sub.add_parser("remover", help="Remover publicação")
+    rm.add_argument("--index", type=int, required=True)
+    rm.set_defaults(func=remover)
 
     args = parser.parse_args()
     if hasattr(args, "func"):
@@ -135,4 +139,5 @@ def main():
     else:
         parser.print_help()
 
-
+if __name__ == "__main__":
+    main()
