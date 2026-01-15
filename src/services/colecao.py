@@ -1,53 +1,65 @@
+from typing import List
+from statistics import mean
 from src.models.publicacao import Publicacao
+from src.models.exceptions import DuplicatedPublicationError
 
 class Colecao:
-    def __init__(self, repositorio):
+    """
+    Gerencia a coleção de publicações e gera relatórios.
+    """
+
+    def __init__(self, repositorio) -> None:
         self.repositorio = repositorio
-        self.publicacoes = repositorio.carregar()
-        self._reindexar()
+        self.publicacoes: List[Publicacao] = repositorio.carregar()
 
-    def _reindexar(self):
-        self._index = {
-            Publicacao.normalizar_chave(p.titulo, p.autor, p.ano, p.tipo()): i
-            for i, p in enumerate(self.publicacoes)
-        }
-
-    def _chave(self, pub):
-        return Publicacao.normalizar_chave(pub.titulo, pub.autor, pub.ano, pub.tipo())
-
-    def adicionar(self, publicacao):
-        chave = self._chave(publicacao)
-        if chave in self._index:
-            raise ValueError("Já existe uma publicação com mesmo título, autor, ano e tipo.")
-        self.publicacoes.append(publicacao)
-        self._reindexar()
+    # ---------------- CADASTRO ----------------
+    def adicionar(self, pub: Publicacao) -> None:
+        if any(p == pub for p in self.publicacoes):
+            raise DuplicatedPublicationError(
+                f"Já existe uma publicação com título '{pub.titulo}' e autor '{pub.autor}'."
+            )
+        self.publicacoes.append(pub)
         self.repositorio.salvar(self.publicacoes)
 
-    def listar(self):
+    def remover(self, pub: Publicacao) -> None:
+        if pub in self.publicacoes:
+            self.publicacoes.remove(pub)
+            self.repositorio.salvar(self.publicacoes)
+
+    def listar(self) -> List[Publicacao]:
         return list(self.publicacoes)
 
-    def buscar(self, titulo, autor, ano, tipo):
-        chave = Publicacao.normalizar_chave(titulo, autor, ano, tipo)
-        idx = self._index.get(chave)
-        return self.publicacoes[idx] if idx is not None else None
+    # ---------------- RELATÓRIOS ----------------
+    def total_publicacoes(self) -> int:
+        return len(self.publicacoes)
 
-    def iniciar(self, titulo, autor, ano, tipo):
-        pub = self.buscar(titulo, autor, ano, tipo)
-        if not pub:
-            raise ValueError("Publicação não encontrada.")
-        pub.iniciar_leitura()
-        self.repositorio.salvar(self.publicacoes)
+    def contagem_por_status(self) -> dict:
+        cont = {"NÃO LIDO": 0, "LENDO": 0, "CONCLUIDO": 0}
+        for p in self.publicacoes:
+            cont[p.status] += 1
+        return cont
 
-    def concluir(self, titulo, autor, ano, tipo, avaliacao=None):
-        pub = self.buscar(titulo, autor, ano, tipo)
-        if not pub:
-            raise ValueError("Publicação não encontrada.")
-        pub.concluir_leitura(avaliacao)
-        self.repositorio.salvar(self.publicacoes)
+    def percentual_por_status(self) -> dict:
+        total = len(self.publicacoes)
+        if total == 0:
+            return {}
+        cont = self.contagem_por_status()
+        return {s: (qtd / total) * 100 for s, qtd in cont.items()}
 
-    def anotar(self, titulo, autor, ano, tipo, texto, trecho=None):
-        pub = self.buscar(titulo, autor, ano, tipo)
-        if not pub:
-            raise ValueError("Publicação não encontrada.")
-        pub.adicionar_anotacao(texto, trecho)
-        self.repositorio.salvar(self.publicacoes)
+    def medias_avaliacoes(self) -> dict:
+        """
+        Retorna média geral das avaliações e média por status.
+        """
+        avaliadas = [p.avaliacao for p in self.publicacoes if p.avaliacao is not None]
+        media_geral = mean(avaliadas) if avaliadas else None
+
+        por_status = {}
+        for st in {"NÃO LIDO", "LENDO", "CONCLUIDO"}:
+            vals = [p.avaliacao for p in self.publicacoes if p.status == st and p.avaliacao is not None]
+            por_status[st] = mean(vals) if vals else None
+
+        return {"geral": media_geral, "por_status": por_status}
+
+    def top5_avaliados(self) -> List[Publicacao]:
+        avaliadas = [p for p in self.publicacoes if p.avaliacao is not None]
+        return sorted(avaliadas, key=lambda p: p.avaliacao, reverse=True)[:5]

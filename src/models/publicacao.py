@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from .livro import Livro
+from .revista import Revista
 from .anotacao import Anotacao
 from src.models.exceptions import InvalidStatusError, InvalidEvaluationError
 
@@ -7,7 +9,7 @@ STATUS_VALIDOS = {"NÃO LIDO", "LENDO", "CONCLUIDO"}
 
 class Publicacao(ABC):
     def __init__(self, titulo: str, autor: str, ano: int, genero: str, paginas: int,
-                 status: str = "NÃO_LIDO", avaliacao: int = None):
+                 status: str = "NÃO LIDO", avaliacao: int = None):
         self.__titulo = None
         self.__autor = None
         self.__ano = None
@@ -167,94 +169,4 @@ class Publicacao(ABC):
         return self.ano < other.ano
 
 
-# ---------------- SUBCLASSE LIVRO ----------------
-class Livro(Publicacao):
-    def __init__(self, titulo: str, autor: str, ano: int, genero: str, paginas: int,
-                 isbn: str, status: str = "NAO_LIDO", avaliacao: int = None):
-        super().__init__(titulo, autor, ano, genero, paginas, status, avaliacao)
-        self.isbn = isbn
-
-    @property
-    def isbn(self) -> str:
-        return self.__isbn
-
-    @isbn.setter
-    def isbn(self, value: str):
-        if not value or not value.strip():
-            raise ValueError("ISBN não pode ser vazio.")
-        if len(value.strip()) not in (10, 13):
-            raise ValueError("ISBN deve ter 10 ou 13 caracteres.")
-        self.__isbn = value.strip()
-
-    def __str__(self):
-        return f"{super().__str__()} | ISBN: {self.isbn}"
-
-    def __repr__(self):
-        return f"<Livro titulo='{self.titulo}', autor='{self.autor}', ano={self.ano}, isbn='{self.isbn}'>"
-
-    def tipo(self):
-        return "Livro"
-
-    def to_dict(self):
-        data = super().to_dict()
-        data["isbn"] = self.isbn
-        return data
-
-    @classmethod
-    def from_dict(cls, dados):
-        return cls(
-            titulo=dados["titulo"],
-            autor=dados["autor"],
-            ano=dados["ano"],
-            genero=dados["genero"],
-            paginas=dados["paginas"],
-            isbn=dados["isbn"],
-            status=dados.get("status", "NAO_LIDO"),
-            avaliacao=dados.get("avaliacao"),
-        )
-
-
-# ---------------- SUBCLASSE REVISTA ----------------
-class Revista(Publicacao):
-    def __init__(self, titulo: str, autor: str, ano: int, genero: str, paginas: int,
-                 edicao: int, status: str = "NAO_LIDO", avaliacao: int = None):
-        super().__init__(titulo, autor, ano, genero, paginas, status, avaliacao)
-        self.edicao = edicao
-
-    @property
-    def edicao(self) -> int:
-        return self.__edicao
-
-    @edicao.setter
-    def edicao(self, value: int):
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError("Edição deve ser um número inteiro positivo.")
-        self.__edicao = value
-
-    def __str__(self):
-        return f"{super().__str__()} | Edição: {self.edicao}"
-
-    def __repr__(self):
-        return f"<Revista titulo='{self.titulo}', autor='{self.autor}', ano={self.ano}, edicao={self.edicao}>"
-
-    def tipo(self):
-        return "Revista"
-
-    def to_dict(self):
-        data = super().to_dict()
-        data["edicao"] = self.edicao
-        return data
-
-    @classmethod
-    def from_dict(cls, dados):
-        return cls(
-            titulo=dados["titulo"],
-            autor=dados["autor"],
-            ano=dados["ano"],
-            genero=dados["genero"],
-            paginas=dados["paginas"],
-            edicao=dados["edicao"],
-            status=dados.get("status", "NAO_LIDO"),
-            avaliacao=dados.get("avaliacao"),
-        )
 

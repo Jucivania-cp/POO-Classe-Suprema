@@ -1,97 +1,138 @@
 import argparse
-from src.models.publicacao import Livro, Revista
+from src.models.livro import Livro
+from src.models.revista import Revista
+from src.models.publicacao import Publicacao
 from src.services.colecao import Colecao
-from src.services.relatorios import top5_avaliacoes, medias, contagem_por_status
 from src.persistence.repositorio import RepositorioJSON
 
-def build_parser():
-    parser = argparse.ArgumentParser(prog="bib", description="Biblioteca Pessoal Digital")
-    sub = parser.add_subparsers(dest="comando")
+# Instancia o repositório e a coleção
+repo = RepositorioJSON("data/biblioteca.json")
+colecao = Colecao(repo)
 
-    # CADASTRAR
-    p = sub.add_parser("cadastrar", help="Cadastrar uma nova publicação")
-    p.add_argument("--titulo", required=True)
-    p.add_argument("--autor", required=True)
-    p.add_argument("--ano", type=int, required=True)
-    p.add_argument("--tipo", choices=["Livro", "Revista"], required=True)
-
-    # LISTAR
-    sub.add_parser("listar", help="Listar publicações")
-
-    # STATUS
-    si = sub.add_parser("iniciar", help="Marcar como LENDO")
-    si.add_argument("--titulo", required=True)
-    si.add_argument("--autor", required=True)
-    si.add_argument("--ano", type=int, required=True)
-    si.add_argument("--tipo", choices=["Livro", "Revista"], required=True)
-
-    sc = sub.add_parser("concluir", help="Marcar como CONCLUIDO e opcionalmente avaliar")
-    sc.add_argument("--titulo", required=True)
-    sc.add_argument("--autor", required=True)
-    sc.add_argument("--ano", type=int, required=True)
-    sc.add_argument("--tipo", choices=["Livro", "Revista"], required=True)
-    sc.add_argument("--avaliacao", type=int)
-
-   
-    # ANOTAR
-    an = sub.add_parser("anotar", help="Adicionar anotação")
-    an.add_argument("--titulo", required=True)
-    an.add_argument("--autor", required=True)
-    an.add_argument("--ano", type=int, required=True)
-    an.add_argument("--tipo", choices=["Livro", "Revista"], required=True)
-    an.add_argument("--texto", required=True)
-    an.add_argument("--trecho")
-
-    # RELATÓRIOS
-    r = sub.add_parser("relatorios", help="Relatórios estatísticos")
-    r.add_argument("--tipo", choices=["top5", "medias", "contagem"], required=True)
-
-    return parser
-
-def main():
-    parser = build_parser()
-    args = parser.parse_args()
-    repo = RepositorioJSON()
-    colecao = Colecao(repo)
-
+# ---------------- SUBCOMANDOS ----------------
+def cadastrar(args):
+    if args.tipo == "livro":
+        pub = Livro(
+            titulo=args.titulo,
+            autor=args.autor,
+            ano=args.ano,
+            genero=args.genero,
+            paginas=args.paginas,
+            isbn=args.isbn
+        )
+    else:
+        pub = Revista(
+            titulo=args.titulo,
+            autor=args.autor,
+            ano=args.ano,
+            genero=args.genero,
+            paginas=args.paginas,
+            edicao=args.edicao
+        )
     try:
-        if args.comando == "cadastrar":
-            pub = Livro(args.titulo, args.autor, args.ano) if args.tipo == "Livro" else Revista(args.titulo, args.autor, args.ano)
-            colecao.adicionar(pub)
-            print(f"OK: '{args.titulo}' cadastrado.")
-        elif args.comando == "listar":
-            pubs = colecao.listar()
-            for i, p in enumerate(pubs, 1):
-                print(f"{i}. {p.tipo()} :: {p.titulo} - {p.autor} ({p.ano}) [{p.status}] "
-                      f"{'(★ ' + str(p.avaliacao) + ')' if p.avaliacao is not None else ''}")
-        elif args.comando == "iniciar":
-            colecao.iniciar(args.titulo, args.autor, args.ano, args.tipo)
-            print("OK: status atualizado para LENDO.")
-        elif args.comando == "concluir":
-            colecao.concluir(args.titulo, args.autor, args.ano, args.tipo, args.avaliacao)
-            msg = "OK: status atualizado para CONCLUIDO."
-            if args.avaliacao is not None:
-                msg += f" Avaliação: {args.avaliacao}."
-            print(msg)
-        elif args.comando == "anotar":
-            colecao.anotar(args.titulo, args.autor, args.ano, args.tipo, args.texto, args.trecho)
-            print("OK: anotação adicionada.")
-        elif args.comando == "relatorios":
-            pubs = colecao.listar()
-            if args.tipo == "top5":
-                for i, p in enumerate(top5_avaliacoes(pubs), 1):
-                    print(f"{i}. {p.titulo} - {p.autor} (★ {p.avaliacao})")
-            elif args.tipo == "medias":
-                m = medias(pubs)
-                print(f"Média geral: {m['geral'] if m['geral'] is not None else '—'}")
-                for st, val in m["por_status"].items():
-                    print(f"{st}: {val if val is not None else '—'}")
-            elif args.tipo == "contagem":
-                c = contagem_por_status(pubs)
-                for st, q in c.items():
-                    print(f"{st}: {q}")
-        else:
-            parser.print_help()
-    except ValueError as e:
-        print(f"Erro: {e}")
+        colecao.adicionar(pub)
+        print("✅ Publicação cadastrada:", pub)
+    except Exception as e:
+        print("❌ Erro ao cadastrar:", e)
+
+def listar(args):
+    pubs = colecao.listar()
+    if not pubs:
+        print("📭 Nenhuma publicação cadastrada.")
+    else:
+        print("📚 Publicações:")
+        for p in pubs:
+            print("-", p)
+
+def anotar(args):
+    pubs = colecao.listar()
+    if not pubs:
+        print("📭 Nenhuma publicação disponível.")
+        return
+    pub = pubs[0]  # exemplo simples: anotar na primeira publicação
+    anot = Anotacao(args.texto, args.trecho)
+    pub.adicionar_anotacao(anot)
+    colecao.repositorio.salvar(colecao.publicacoes)
+    print("📝 Anotação adicionada:", anot)
+
+def relatorio(args):
+    print("📊 Relatório:")
+    print("Total:", colecao.total_publicacoes())
+    print("Percentuais:", colecao.percentual_por_status())
+    medias = colecao.medias_avaliacoes()
+    print("Média geral das avaliações:", medias["geral"])
+    print("Média por status:", medias["por_status"])
+    print("Contagem por status:", colecao.contagem_por_status())
+    print("Percentual por status:", colecao.percentual_por_status())
+    top5 = colecao.top5_avaliados()
+    if not top5:
+        print("Nenhuma publicação avaliada ainda.")
+    else:
+        print("Top 5 mais bem avaliados:")
+        for p in top5:
+            print("-", p)
+
+def buscar(args):
+    resultados = []
+    if args.titulo:
+        resultados = colecao.buscar_por_titulo(args.titulo)
+    elif args.autor:
+        resultados = colecao.buscar_por_autor(args.autor)
+    elif args.genero:
+        resultados = colecao.buscar_por_genero(args.genero)
+    elif args.status:
+        resultados = colecao.buscar_por_status(args.status)
+
+    if not resultados:
+        print("📭 Nenhuma publicação encontrada.")
+    else:
+        print("🔎 Resultados da busca:")
+        for p in resultados:
+            print("-", p)
+
+# ---------------- CLI PRINCIPAL ----------------
+def main():
+    parser = argparse.ArgumentParser(prog="bib", description="Biblioteca Pessoal Digital")
+    sub = parser.add_subparsers(dest="cmd")
+
+    # cadastrar
+    cad = sub.add_parser("cadastrar", help="Cadastrar uma publicação")
+    cad.add_argument("--tipo", choices=["livro", "revista"], required=True)
+    cad.add_argument("--titulo", required=True)
+    cad.add_argument("--autor", required=True)
+    cad.add_argument("--ano", type=int, required=True)
+    cad.add_argument("--genero", required=True)
+    cad.add_argument("--paginas", type=int, required=True)
+    cad.add_argument("--isbn")
+    cad.add_argument("--edicao", type=int)
+    cad.set_defaults(func=cadastrar)
+
+    # listar
+    lst = sub.add_parser("listar", help="Listar publicações")
+    lst.set_defaults(func=listar)
+
+    # anotar
+    ant = sub.add_parser("anotar", help="Adicionar anotação")
+    ant.add_argument("--texto", required=True)
+    ant.add_argument("--trecho")
+    ant.set_defaults(func=anotar)
+
+    # relatorio
+    rel = sub.add_parser("relatorio", help="Gerar relatório")
+    rel.set_defaults(func=relatorio)
+
+    # buscar
+    bsc = sub.add_parser("buscar", help="Buscar publicações")
+    bsc.add_argument("--titulo")
+    bsc.add_argument("--autor")
+    bsc.add_argument("--genero")
+    bsc.add_argument("--status", choices=["NÃO LIDO", "LENDO", "CONCLUIDO"])
+    bsc.set_defaults(func=buscar)
+
+    args = parser.parse_args()
+    if hasattr(args, "func"):
+        args.func(args)
+    else:
+        parser.print_help()
+
 

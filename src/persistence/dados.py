@@ -3,7 +3,7 @@ import os
 from src.models.publicacao import Publicacao
 from src.models.exceptions import DuplicatedPublicationError
 
-ARQUIVO_JSON = "publicacoes.json"
+ARQUIVO_JSON = "biblioteca.json"
 
 def salvar_publicacoes(publicacoes, arquivo=ARQUIVO_JSON):
     """

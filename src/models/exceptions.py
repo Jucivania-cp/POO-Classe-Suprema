@@ -9,3 +9,6 @@ class InvalidStatusError(Exception):
 class InvalidEvaluationError(Exception):
     """Erro lançado quando uma avaliação inválida é atribuída."""
     pass
+
+class InvalidAnnotationError(Exception):
+    """Erro lançado quando uma anotação inválida é atribuída"""
