@@ -29,9 +29,9 @@ def cadastrar(args):
     # só chega aqui se pub foi criado
     try:
         colecao.adicionar(pub)
-        print("✅ Publicação cadastrada:", pub)
+        print("Publicação cadastrada:", pub)
     except Exception as e:
-        print("❌ Erro ao cadastrar:", e)
+        print("Erro ao cadastrar:", e)
 
 
 def listar(args):
@@ -69,9 +69,9 @@ def anotar(args):
         anot = Anotacao(args.texto)
         pub.adicionar_anotacao(anot)
         colecao.repositorio.salvar(colecao.publicacoes)
-        print(f"📝 Anotação adicionada em '{pub.titulo}': {args.texto}")
+        print(f"Anotação adicionada em '{pub.titulo}': {args.texto}")
     except Exception as e:
-        print("❌ Erro:", e)
+        print("Erro:", e)
 
 
 def buscar_titulo(args):
@@ -106,7 +106,7 @@ def remover(args):
     try:
         pub = pubs[args.index]
         colecao.remover(pub)
-        print("🗑️ Publicação removida:", pub)
+        print("Publicação removida:", pub)
     except Exception as e:
         print("Erro:", e)
 
@@ -150,6 +150,11 @@ def main():
     ba = sub.add_parser("buscar-autor", help="Buscar por autor")
     ba.add_argument("--autor", required=True)
     ba.set_defaults(func=buscar_autor)
+
+    av = sub.add_parser("avaliar", help="Avaliar uma publicação concluída")
+    av.add_argument("--index", type=int, required=True, help="Índice da publicação na lista")
+    av.add_argument("--nota", type=float, required=True, help="Nota de 0 a 10")
+    av.set_defaults(func=avaliar)
 
     rm = sub.add_parser("remover", help="Remover publicação")
     rm.add_argument("--index", type=int, required=True)

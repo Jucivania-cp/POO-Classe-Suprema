@@ -8,7 +8,7 @@
         "paginas": 200,
         "isbn": "1",
         "status": "CONCLUIDO",
-        "avaliacao": null,
+        "avaliacao": 10.0,
         "anotacoes": [
             {
                 "texto": "exemplo de anotação",
@@ -32,21 +32,6 @@
         "avaliacao": null,
         "anotacoes": [],
         "data_inclusao": "2026-01-15T14:42:54.791106",
-        "data_inicio": null,
-        "data_fim": null
-    },
-    {
-        "tipo": "Livro",
-        "titulo": "teste8",
-        "autor": "Machado de Assis",
-        "ano": 1899,
-        "genero": "romance",
-        "paginas": 200,
-        "isbn": null,
-        "status": "NÃO LIDO",
-        "avaliacao": null,
-        "anotacoes": [],
-        "data_inclusao": "2026-01-18T12:32:30.506696",
         "data_inicio": null,
         "data_fim": null
     }
