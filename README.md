@@ -94,7 +94,7 @@ Se o comando "cadastrar" sugerido acima foi executado, o comando "iniciar" deve 
 python main.py concluir --index 10
 ```
 
-*Avaliar Publicação"
+*Avaliar Publicação*
 
 ```bash
 python main.py avaliar --index 10 --nota 8
