@@ -47,7 +47,7 @@ Class: RepositorioJSON
 ## Instruções de instalação e execução 
 
 ### Clonar o Repositório
-Use o seguinte link do para clonar o repositorio
+O sistema é acessado via CLI (linha de comando). Certifique-se de que o python esteja instalado. Em seguida, execute o comando abaixo no terminal ou no ambiente de codigo (como VS code) para clonar o repositorio
 
 ```bash
 git clone https://github.com/Jucivania-cp/POO-Classe-Suprema.git
@@ -59,10 +59,11 @@ cd POO-Classe-Suprema
 ```
 
 ### Instalar Dependências
+
+o arquivo requirements.txt contem as dependencias para os testes com pytest, portanto execute: 
 ```bash
 pip install -r requirements.txt
 ```
-o arquivo requirements.txt contem as dependencias para os testes com pytest 
 
 ### Execução
 
@@ -110,7 +111,6 @@ python main.py anotar --index 0 --texto "Minha anotação de exemplo"
 ```bash
 python main.py relatorios
 ```
-
 
 4. **Testes**
 Os testes foram implentados com pytest, para executar todos os testes use:
