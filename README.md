@@ -51,3 +51,15 @@ Class: RepositorioJSON
    git clone https://github.com/Jucivania-cp/POO-Classe-Suprema.git
    cd POO-Classe-Suprema
 
+2. **Instalar dependencias**
+  ```bash
+  pip install -r requirements.txt
+
+o arquivo requirements.txt contem as dependencias para os testes com pytest 
+
+3. **Execução**
+O sistema deve ser acessado via CLI (linha de comando):
+
+Exemplos de uso- Cadastrar uma publicação
+```bash
+python main.py cadastrar --tipo livro --titulo "Alice no País das Maravilhas" --autor "Lewis Carroll" --ano 1865 --genero "Fantasia" --paginas 144
