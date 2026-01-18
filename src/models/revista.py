@@ -8,7 +8,7 @@ class Revista(Publicacao):
         self._edicao = edicao
 
     @property
-    def edicao(self): return self._isbn
+    def edicao(self): return self._edicao
 
     def to_dict(self) -> dict:
         d = {
