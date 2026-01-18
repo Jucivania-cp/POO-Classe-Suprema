@@ -6,13 +6,19 @@
         "ano": 1899,
         "genero": "romance",
         "paginas": 200,
-        "status": "NÃO LIDO",
+        "isbn": "1",
+        "status": "CONCLUIDO",
         "avaliacao": null,
-        "anotacoes": [],
+        "anotacoes": [
+            {
+                "texto": "exemplo de anotação",
+                "trecho": null,
+                "data": "2026-01-18T13:02:43.007271"
+            }
+        ],
         "data_inclusao": "2026-01-15T14:42:30.330366",
-        "data_inicio": null,
-        "data_fim": null,
-        "isbn": "1"
+        "data_inicio": "2026-01-18T12:43:09.969588",
+        "data_fim": "2026-01-18T12:44:26.294471"
     },
     {
         "tipo": "Livro",
@@ -21,12 +27,27 @@
         "ano": 1899,
         "genero": "romance",
         "paginas": 200,
+        "isbn": null,
         "status": "NÃO LIDO",
         "avaliacao": null,
         "anotacoes": [],
         "data_inclusao": "2026-01-15T14:42:54.791106",
         "data_inicio": null,
-        "data_fim": null,
-        "isbn": null
+        "data_fim": null
+    },
+    {
+        "tipo": "Livro",
+        "titulo": "teste8",
+        "autor": "Machado de Assis",
+        "ano": 1899,
+        "genero": "romance",
+        "paginas": 200,
+        "isbn": null,
+        "status": "NÃO LIDO",
+        "avaliacao": null,
+        "anotacoes": [],
+        "data_inclusao": "2026-01-18T12:32:30.506696",
+        "data_inicio": null,
+        "data_fim": null
     }
 ]

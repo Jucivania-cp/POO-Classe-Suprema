@@ -6,9 +6,11 @@ from src.models.exceptions import DuplicatedPublicationError
 class Colecao:
     def __init__(self, repositorio) -> None:
         self.repositorio = repositorio
-        self.publicacoes: List[Publicacao] = repositorio.carregar()
+        self.publicacoes = repositorio.carregar()
 
     def adicionar(self, pub: Publicacao) -> None:
+        if pub is None:
+            raise ValueError("Publicação inválida (None).")
         if any(p == pub for p in self.publicacoes):
             raise DuplicatedPublicationError(
                 f"Já existe uma publicação com título '{pub.titulo}' e autor '{pub.autor}'."
@@ -16,13 +18,12 @@ class Colecao:
         self.publicacoes.append(pub)
         self.repositorio.salvar(self.publicacoes)
 
-    def remover(self, pub: Publicacao) -> None:
-        if pub in self.publicacoes:
-            self.publicacoes.remove(pub)
-            self.repositorio.salvar(self.publicacoes)
+    def listar(self): return self.publicacoes
+    
+    def remover(self, pub: Publicacao):
+        self.publicacoes.remove(pub)
+        self.repositorio.salvar(self.publicacoes)
 
-    def listar(self) -> List[Publicacao]:
-        return list(self.publicacoes)
 
     # Relatórios
     def total_publicacoes(self) -> int:

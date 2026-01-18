@@ -9,25 +9,30 @@ colecao = Colecao(repo)
 # ---------------- COMANDOS ----------------
 
 def cadastrar(args):
+    pub = None
     if args.tipo == "livro":
         if args.edicao is not None:
             print("ATENÇÃO: Para livros, não use --edicao.")
             return
         pub = Livro(args.titulo, args.autor, args.ano, args.genero, args.paginas, args.isbn)
+
     elif args.tipo == "revista":
         if args.isbn is not None:
             print("ATENÇÃO: Revista não aceita --isbn.")
             return
         pub = Revista(args.titulo, args.autor, args.ano, args.genero, args.paginas, args.edicao)
+
     else:
         print("ATENÇÃO: Tipo inválido.")
         return
 
+    # só chega aqui se pub foi criado
     try:
         colecao.adicionar(pub)
-        print("Publicação cadastrada:", pub)
+        print("✅ Publicação cadastrada:", pub)
     except Exception as e:
-        print("ATENÇÃO: Erro ao cadastrar:", e)
+        print("❌ Erro ao cadastrar:", e)
+
 
 def listar(args):
     pubs = colecao.listar()
@@ -56,6 +61,18 @@ def concluir(args):
         print("Leitura concluída:", pub)
     except Exception as e:
         print("Erro:", e)
+
+def anotar(args):
+    pubs = colecao.listar()
+    try:
+        pub = pubs[args.index]
+        anot = Anotacao(args.texto)
+        pub.adicionar_anotacao(anot)
+        colecao.repositorio.salvar(colecao.publicacoes)
+        print(f"📝 Anotação adicionada em '{pub.titulo}': {args.texto}")
+    except Exception as e:
+        print("❌ Erro:", e)
+
 
 def buscar_titulo(args):
     pubs = [p for p in colecao.listar() if args.titulo.lower() in p.titulo.lower()]
@@ -120,6 +137,11 @@ def main():
     con = sub.add_parser("concluir", help="Concluir leitura")
     con.add_argument("--index", type=int, required=True)
     con.set_defaults(func=concluir)
+
+    an = sub.add_parser("anotar", help="Adicionar anotação a uma publicação")
+    an.add_argument("--index", type=int, help="Índice da publicação")
+    an.add_argument("--texto", help="Texto da anotação")
+    an.set_defaults(func=anotar)
 
     bt = sub.add_parser("buscar-titulo", help="Buscar por título")
     bt.add_argument("--titulo", required=True)
