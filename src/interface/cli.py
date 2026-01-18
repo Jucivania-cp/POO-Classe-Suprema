@@ -110,6 +110,25 @@ def remover(args):
     except Exception as e:
         print("Erro:", e)
 
+def relatorios(args):
+    print("Relatórios da Biblioteca")
+    print("Total de publicações:", colecao.total_publicacoes())
+
+    stats = colecao.estatisticas_leitura()
+    for status, (qtd, perc) in stats.items():
+        print(f"{status}: {qtd} ({perc:.1f}%)")
+
+    media = colecao.media_avaliacoes()
+    if media is not None:
+        print(f"Média das avaliações: {media:.2f}")
+    else:
+        print("Nenhuma avaliação registrada ainda.")
+
+    print("\nTop 5 publicações mais bem avaliadas:")
+    for pub in colecao.top5_avaliadas():
+        print(f"- {pub.titulo} ({pub.autor}) → Nota {pub.avaliacao}")
+
+
 # ---------------- MAIN ----------------
 
 def main():
@@ -159,6 +178,10 @@ def main():
     rm = sub.add_parser("remover", help="Remover publicação")
     rm.add_argument("--index", type=int, required=True)
     rm.set_defaults(func=remover)
+
+    rel = sub.add_parser("relatorios", help="Gerar relatórios da biblioteca")
+    rel.set_defaults(func=relatorios)
+
 
     args = parser.parse_args()
     if hasattr(args, "func"):

@@ -19,7 +19,7 @@ class Colecao:
         self.repositorio.salvar(self.publicacoes)
 
     def listar(self): return self.publicacoes
-    
+
     def remover(self, pub: Publicacao):
         self.publicacoes.remove(pub)
         self.repositorio.salvar(self.publicacoes)
@@ -29,28 +29,22 @@ class Colecao:
     def total_publicacoes(self) -> int:
         return len(self.publicacoes)
 
-    def contagem_por_status(self) -> dict:
-        cont = {STATUS_NAO_LIDO: 0, STATUS_LENDO: 0, STATUS_CONCLUIDO: 0}
-        for p in self.publicacoes:
-            cont[p.status] += 1
-        return cont
-
-    def percentual_por_status(self) -> dict:
+    def estatisticas_leitura(self) -> dict:
         total = len(self.publicacoes)
         if total == 0:
-            return {}
-        cont = self.contagem_por_status()
-        return {s: (qtd / total) * 100 for s, qtd in cont.items()}
+            return {"NÃO LIDO": (0, 0.0), "LENDO": (0, 0.0), "CONCLUIDO": (0, 0.0)}
 
-    def medias_avaliacoes(self) -> dict:
-        avaliadas = [p.avaliacao for p in self.publicacoes if p.avaliacao is not None]
-        media_geral = mean(avaliadas) if avaliadas else None
-        por_status = {}
-        for st in (STATUS_NAO_LIDO, STATUS_LENDO, STATUS_CONCLUIDO):
-            vals = [p.avaliacao for p in self.publicacoes if p.status == st and p.avaliacao is not None]
-            por_status[st] = mean(vals) if vals else None
-        return {"geral": media_geral, "por_status": por_status}
+        counts = {
+            STATUS_NAO_LIDO: sum(1 for p in self.publicacoes if p.status == STATUS_NAO_LIDO),
+            STATUS_LENDO: sum(1 for p in self.publicacoes if p.status == STATUS_LENDO),
+            STATUS_CONCLUIDO: sum(1 for p in self.publicacoes if p.status == STATUS_CONCLUIDO),
+        }
+        return {k: (v, v/total*100) for k, v in counts.items()}
 
-    def top5_avaliados(self) -> List[Publicacao]:
-        avaliadas = [p for p in self.publicacoes if p.avaliacao is not None]
-        return sorted(avaliadas, key=lambda p: p.avaliacao, reverse=True)[:5]
+    def media_avaliacoes(self) -> float | None:
+        notas = [p.avaliacao for p in self.publicacoes if p.status == STATUS_CONCLUIDO and p.avaliacao is not None]
+        return mean(notas) if notas else None
+
+    def top5_avaliadas(self) -> list:
+        concluidas = [p for p in self.publicacoes if p.avaliacao is not None]
+        return sorted(concluidas, key=lambda p: p.avaliacao, reverse=True)[:5]
